@@ -34,7 +34,18 @@
 #define IRLED_TGL IRLEDP ^= (1<<IRLED)
 #define IRLED_INI DDRB |= (1<<IRLED); IRLED_OFF
 
-#define LED PORTB5
+#define C38KHZP PORTD
+#define C38KHZ PORTD3
+#define C38KHZD DDRD
+#define C38KHZ_ON C38KHZP  |= (1<<C38KHZ)
+#define C38KHZ_OFF C38KHZP &= ~(1<<C38KHZ)
+#define C38KHZ_TGL C38KHZP ^= (1<<C38KHZ)
+// OCR2 = (16 000 000 / 38 000)/2 - 1 = 209.526  == 209
+// Fout = 16 000 000 / (2 * (209 +1)) = 38095 Hz (ideal freq is 38222 Hz; div = -0.25%)
+#define C38KHZ_INI C38KHZD |= (1<<C38KHZ); C38KHZ_OFF; TCCR2B = 1; TCCR2A = ((1 << WGM21) | (1 << COM2B0)); OCR2A = 210; OCR2B = 210  // DIV (1*210)  - CTC mode - toggle OC2B 
+
+
+#define LED PORTB5 
 #define LEDP PORTB
 #define LED_ON LEDP  |= (1<<LED)
 #define LED_OFF LEDP &= ~(1<<LED)
@@ -124,7 +135,7 @@ int main(void)
 	//TCCR2A = 0;
 	//ICP_TIMER_OCR1A_TOGGLE_CONFIG;
 	TMR0_INT_EN;
-   
+    C38KHZ_INI;
     /*
      *  Initialize UART library, pass baudrate and AVR cpu clock
      *  with the macro 
@@ -347,7 +358,7 @@ int main(void)
 		//uart_puts_P("Done");
 		//sei();
 		//IRC_MODE = IRC_MODE_IDLE;
-		temp16 = IcpScanResult[0]
+		temp16 = IcpScanResult[0];
 		OCR1A = temp16;
 		ICP_TIMER_OCR1A_TOGGLE_CONFIG;
 		TIFR1 |= (1 << OCF1A);
@@ -357,7 +368,7 @@ int main(void)
 			
 			//itoa(i, buffer, 10);   // convert integer into string (decimal format)
 			//uart_puts(buffer);
-			temp16 = IcpScanResult[i]
+			temp16 = IcpScanResult[i];
 			OCR1A = temp16;
 			TIFR1 |= (1 << OCF1A);
 			while(TIFR1 & (1 << OCF1A));
